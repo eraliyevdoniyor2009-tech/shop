@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Sozlamalar
 BOT_TOKEN = "8162367529:AAE8OOVJQVK9syCrYZbIWvzRDxcoDVzEbrg"
 ADMIN_ID = 8347167027
-WEB_APP_URL = "https://sizning-domen.onrender.com"  # Bu yerga Render URL ni kiriting
+WEB_APP_URL = "https://shop-9h55.onrender.com "  # Bu yerga Render URL ni kiriting
 
 # Buyurtmalar bazasi (production uchun database ishlatish kerak)
 orders_db = {}
