@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#3390ec">
+    <title>Do'kon</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            z-index: 100;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            margin: -16px -16px 16px -16px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .categories {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--tg-theme-button-color, #3390ec);
+            background-color: transparent;
+            color: var(--tg-theme-button-color, #3390ec);
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .category-btn.active {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .product-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 160px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .product-info {
+            padding: 12px;
+        }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tg-theme-button-color, #3390ec);
+            margin-bottom: 8px;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-display {
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .cart-button {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            padding: 16px;
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+
+        .cart-button:disabled {
+            opacity: 0.5;
+        }
+
+        .cart-badge {
+            background-color: var(--tg-theme-button-text-color, #ffffff);
+            color: var(--tg-theme-button-color, #3390ec);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .cart-view {
+            display: none;
+        }
+
+        .cart-view.active {
+            display: block;
+        }
+
+        .cart-item {
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .cart-item-price {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--tg-theme-button-color, #3390ec);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .checkout-form {
+            margin-top: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .payment-method {
+            padding: 16px;
+            border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .payment-method.selected {
+            border-color: var(--tg-theme-button-color, #3390ec);
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+        }
+
+        .payment-icon {
+            font-size: 24px;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .payment-desc {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .total-section {
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .total-row.final {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .submit-order-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .submit-order-btn:disabled {
+            opacity: 0.5;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 48px 16px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .empty-cart-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border: 2px dashed var(--tg-theme-hint-color, #e0e0e0);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-preview {
+            margin-top: 8px;
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .success-view {
+            display: none;
+            text-align: center;
+            padding: 48px 16px;
+        }
+
+        .success-view.active {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            color: var(--tg-theme-hint-color, #999999);
+            margin-bottom: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="productsView" class="products-view">
+            <div class="header">
+                <h1>Do'kon</h1>
+                <div class="categories" id="categories"></div>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+
+        <div id="cartView" class="cart-view">
+            <button class="back-btn" onclick="showProducts()">← Orqaga</button>
+            <h2 style="margin-bottom: 16px;">Savatcha</h2>
+            <div id="cartItems"></div>
+            
+            <div id="checkoutSection" class="hidden">
+                <h3 style="margin-bottom: 16px;">Buyurtma berish</h3>
+                
+                <form id="checkoutForm" class="checkout-form">
+                    <div class="form-group">
+                        <label class="form-label">Telefon raqami *</label>
+                        <input type="tel" class="form-input" id="phoneInput" placeholder="+998 XX XXX XX XX" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Manzil *</label>
+                        <input type="text" class="form-input" id="addressInput" placeholder="Yetkazib berish manzili" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Izoh (ixtiyoriy)</label>
+                        <textarea class="form-input" id="notesInput" rows="3" placeholder="Qo'shimcha ma'lumot"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">To'lov usuli *</label>
+                        <div class="payment-methods">
+                            <div class="payment-method selected" data-method="cash">
+                                <div class="payment-icon">💵</div>
+                                <div class="payment-info">
+                                    <div class="payment-title">Naqd pul</div>
+                                    <div class="payment-desc">Yetkazib berilganda to'lash</div>
+                                </div>
+                            </div>
+                            <div class="payment-method" data-method="card">
+                                <div class="payment-icon">💳</div>
+                                <div class="payment-info">
+                                    <div class="payment-title">Karta orqali</div>
+                                    <div class="payment-desc">Chek yuklash kerak</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group hidden" id="receiptUpload">
+                        <label class="form-label">To'lov cheki *</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="receiptInput" accept="image/*" capture="environment">
+                            <label for="receiptInput" class="file-input-label">
+                                <span>📷</span>
+                                <span>Chek yuklash</span>
+                            </label>
+                        </div>
+                        <img id="receiptPreview" class="file-preview hidden" alt="Chek"/>
+                    </div>
+
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>Jami mahsulotlar:</span>
+                            <span id="subtotal">0 so'm</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Yetkazib berish:</span>
+                            <span id="deliveryFee">Bepul</span>
+                        </div>
+                        <div class="total-row final">
+                            <span>Jami:</span>
+                            <span id="finalTotal">0 so'm</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-order-btn">Buyurtma berish</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="successView" class="success-view">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Buyurtma qabul qilindi!</div>
+            <div class="success-message">Buyurtmangiz muvaffaqiyatli yuborildi. Tez orada siz bilan bog'lanamiz.</div>
+            <button class="submit-order-btn" onclick="resetApp()">Yangi buyurtma</button>
+        </div>
+
+        <button id="cartButton" class="cart-button" onclick="showCart()" disabled>
+            <span>Savatchaga o'tish</span>
+            <span class="cart-badge" id="cartCount">0</span>
+        </button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
